@@ -10,3 +10,5 @@ License: GPL-3
 URL: https://revtools.net
 BugReports: https://github.com/mjwestgate/revtools/issues
 LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 6.1.1

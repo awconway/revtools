@@ -1,22 +1,28 @@
-screen_abstracts <- function(
-  x = NULL
+#' extract_data
+#' 
+#' @export
+#' @rdname extract_data
+
+
+extract_data <- function(
+x = NULL
 ){
-
-  data_in <- load_abstract_data(data = x)
-
+  
+  data_in <- load_abstract_data(data = x) # find a way to load pdf associated with article to iframe
+  
   # create ui
   ui_data <- screen_abstracts_ui()
   ui <- shinydashboard::dashboardPage(
     title = "revtools | screen_abstracts",
-  	ui_data$header,
-  	ui_data$sidebar,
-  	ui_data$body,
-  	skin = "black"
+    ui_data$header,
+    ui_data$sidebar,
+    ui_data$body,
+    skin = "black"
   )
-
+  
   # start server
   server <- function(input, output, session){
-
+    
     # build reactive values
     data <- reactiveValues(
       raw = data_in$data$raw
@@ -28,12 +34,12 @@ screen_abstracts <- function(
     display <- reactiveValues(
       notes = FALSE
     )
-
+    
     # create header image
     output$header <- renderPlot({
       revtools_logo(text = "screen_abstracts")
     })
-
+    
     # DATA INPUT
     ## when specified, ensure input data is processed correctly
     observeEvent(input$data_in, {
@@ -47,19 +53,19 @@ screen_abstracts <- function(
         current_data = data_previous
       )
       import_result <- add_abstract_columns(import_result)
-
+      
       # export to reactiveValues
       data$raw <- import_result
       progress$row <- which(data$raw[, input$order] == progress$current)
     })
-
+    
     # ABSTRACT SCREENING
     # change order of articles as necessary
     observeEvent(input$order, {
       progress$current <- 1
       progress$row <- which(data$raw[, input$order] == progress$current)
     })
-
+    
     # display text for the current entry
     # note that observe is necessary to force changes when input$order changes
     observe({
@@ -85,18 +91,18 @@ screen_abstracts <- function(
             ),
             "<br>",
             switch(as.character(data$raw$color[progress$row]),
-              "#000000" = "",
-              "#405d99" = "<em>Status: Selected</em>",
-              "#993f3f" = "<em>Status: Excluded</em>"
+                   "#000000" = "",
+                   "#405d99" = "<em>Status: Selected</em>",
+                   "#993f3f" = "<em>Status: Excluded</em>"
             ),
             "<br><br>",
-           abstract_text,
-           "</font>"
-         )
+            abstract_text,
+            "</font>"
+          )
         )
       })
     })
-
+    
     # RENDER SELECTION BUTTONS
     output$selector_buttons <- renderUI({
       if(!is.null(data$raw)){
@@ -104,7 +110,7 @@ screen_abstracts <- function(
           list(
             actionButton(
               inputId = "select_yes",
-              label = "Included",
+              label = "Include",
               style = "
                 background-color: #7c93c1;
                 color: #fff;
@@ -161,14 +167,14 @@ screen_abstracts <- function(
         )
       }
     })
-
+    
     output$progress_text <- renderPrint({
       if(!is.null(data$raw)){
         HTML(
           paste0(
             "<br>",
             length(which(data$raw$selected == "selected")) +
-            length(which(data$raw$selected == "excluded")),
+              length(which(data$raw$selected == "excluded")),
             " of ",
             nrow(data$raw),
             " entries screened"
@@ -176,12 +182,12 @@ screen_abstracts <- function(
         )
       }
     })
-
+    
     # when toggle is triggered, invert display status of notes
     observeEvent(input$notes_toggle, {
       display$notes <- !display$notes
     })
-
+    
     # render notes
     output$render_notes <- renderUI({
       if(display$notes){
@@ -206,12 +212,12 @@ screen_abstracts <- function(
         )
       }
     })
-
+    
     # save notes
     observeEvent(input$notes_save, {
       data$raw$notes[progress$row] <- input$abstract_notes
     })
-
+    
     # record & respond to user inputs
     observeEvent(input$select_yes, {
       data$raw$selected[progress$row] <- "selected"
@@ -220,12 +226,12 @@ screen_abstracts <- function(
       #   data$raw$notes[progress$row] <- input$abstract_notes
       # }
     })
-
+    
     observeEvent(input$select_no, {
       data$raw$selected[progress$row] <- "excluded"
       data$raw$color[progress$row] <- "#993f3f"
     })
-
+    
     observeEvent(input$abstract_next, {
       test_add <- which(data$raw[, input$order] == progress$current + 1)
       if(length(test_add) > 0){
@@ -233,14 +239,14 @@ screen_abstracts <- function(
         progress$row <- which(data$raw[, input$order] == progress$current)
       }
     })
-
+    
     observeEvent(input$abstract_previous, {
       if((progress$current - 1) > 0){
         progress$current <- progress$current - 1
         progress$row <- which(data$raw[, input$order] == progress$current)
       }
     })
-
+    
     # SAVE OPTIONS
     observeEvent(input$save_data, {
       if(is.null(data$raw)){
@@ -259,11 +265,11 @@ screen_abstracts <- function(
         showModal(
           modalDialog(
             textInput("save_filename",
-              label = "File Name"
+                      label = "File Name"
             ),
             selectInput("save_data_filetype",
-              label = "File Type",
-              choices = c("csv", "rds")
+                        label = "File Type",
+                        choices = c("csv", "rds")
             ),
             actionButton("save_data_execute", "Save"),
             modalButton("Cancel"),
@@ -274,7 +280,7 @@ screen_abstracts <- function(
         )
       }
     })
-
+    
     observeEvent(input$save_data_execute, {
       if(nchar(input$save_filename) == 0){
         filename <- "revtools_title_screening"
@@ -290,12 +296,12 @@ screen_abstracts <- function(
       }
       filename <- paste(filename, input$save_data_filetype, sep = ".")
       switch(input$save_data_filetype,
-        "csv" = {write.csv(data$raw, file = filename, row.names = FALSE)},
-        "rds" = {saveRDS(data$raw, file = filename)}
+             "csv" = {write.csv(data$raw, file = filename, row.names = FALSE)},
+             "rds" = {saveRDS(data$raw, file = filename)}
       )
       removeModal()
     })
-
+    
     # add option to remove data
     observeEvent(input$clear_data, {
       shiny::showModal(
@@ -316,7 +322,7 @@ screen_abstracts <- function(
         )
       )
     })
-
+    
     observeEvent(input$clear_data_confirmed, {
       data$raw <- NULL
       progress$current <- 1
@@ -324,17 +330,17 @@ screen_abstracts <- function(
       display$notes <- FALSE
       removeModal()
     })
-
+    
     observeEvent(input$exit_app, {
       exit_modal()
     })
-
+    
     observeEvent(input$exit_app_confirmed, {
       stopApp(returnValue = invisible(data$raw))
     })
-
+    
   } # end server
-
+  
   print(shinyApp(ui, server))
-
+  
 }
