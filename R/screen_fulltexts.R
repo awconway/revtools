@@ -1,9 +1,3 @@
-#' screen_fulltexts
-#' 
-#' @export
-#' @rdname screen_fulltexts
-
-
 screen_fulltexts <- function(
 x = NULL
 ){
@@ -13,7 +7,7 @@ x = NULL
   # create ui
   ui_data <- screen_abstracts_ui()
   ui <- shinydashboard::dashboardPage(
-    title = "revtools | screen_abstracts",
+    title = "revtools | screen_fulltexts",
     ui_data$header,
     ui_data$sidebar,
     ui_data$body,
