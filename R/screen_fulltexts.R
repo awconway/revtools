@@ -1,10 +1,10 @@
-#' extract_data
+#' screen_fulltexts
 #' 
 #' @export
-#' @rdname extract_data
+#' @rdname screen_fulltexts
 
 
-extract_data <- function(
+screen_fulltexts <- function(
 x = NULL
 ){
   
@@ -37,7 +37,7 @@ x = NULL
     
     # create header image
     output$header <- renderPlot({
-      revtools_logo(text = "screen_abstracts")
+      revtools_logo(text = "screen_fulltexts")
     })
     
     # DATA INPUT
@@ -92,7 +92,7 @@ x = NULL
             "<br>",
             switch(as.character(data$raw$color[progress$row]),
                    "#000000" = "",
-                   "#405d99" = "<em>Status: Selected</em>",
+                   "#405d99" = "<em>Status: Included</em>",
                    "#993f3f" = "<em>Status: Excluded</em>"
             ),
             "<br><br>",
@@ -173,7 +173,7 @@ x = NULL
         HTML(
           paste0(
             "<br>",
-            length(which(data$raw$selected == "selected")) +
+            length(which(data$raw$selected == "included")) +
               length(which(data$raw$selected == "excluded")),
             " of ",
             nrow(data$raw),
@@ -220,7 +220,7 @@ x = NULL
     
     # record & respond to user inputs
     observeEvent(input$select_yes, {
-      data$raw$selected[progress$row] <- "selected"
+      data$raw$selected[progress$row] <- "included"
       data$raw$color[progress$row] <- "#405d99"
       # if(display$notes){
       #   data$raw$notes[progress$row] <- input$abstract_notes
